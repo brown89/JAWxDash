@@ -11,3 +11,7 @@ class Div:
 
 class Button:
     DELETE_SELECTED = "btn_delete_selected"
+
+
+class Store:
+    UPLOADED_FILES = "uploaded_files"
