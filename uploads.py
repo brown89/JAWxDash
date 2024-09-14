@@ -19,7 +19,7 @@ drag_n_drop = dcc.Upload(
         'lineHeight': '60px',
         'borderWidth': '1px',
         'borderStyle': 'dashed',
-        'borderRadius': '5px',
+        'borderRadius': '10px',
         'textAlign': 'center',
         'margin': '10px'
     },
