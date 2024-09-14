@@ -14,4 +14,9 @@ class Button:
 
 
 class Store:
-    UPLOADED_FILES = "uploaded_files"
+    UPLOADED_FILES = "store_uploaded_files"
+
+
+class Slider:
+    ANGLE_OF_INCIDENT = "slider_angle_of_incident"
+    

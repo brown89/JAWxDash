@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 import numpy as np
 
 # local import
-from uploads.drag_n_drop import drag_n_drop
+from uploads import drag_n_drop
 from delete_button import delete_button
 
 
