@@ -15,7 +15,7 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([
     # Initiating 'Store' for holding uploaded files i.e. *.txt and *.csv
-    dcc.Store(id=ids.Store.UPLOADED_FILES),
+    dcc.Store(id=ids.Store.UPLOADED_FILES, data={}),
 
     # Left column
     html.Div([
