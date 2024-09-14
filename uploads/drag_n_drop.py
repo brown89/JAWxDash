@@ -33,9 +33,9 @@ class DataXYZ:
     @classmethod
     def from_dataframe(cls, data_frame:pd.DataFrame):
         return DataXYZ(
-            data_frame[:, 0].to_list(),
-            data_frame[:, 1].to_list(),
-            data_frame[:, 2].to_list()
+            data_frame['x'].to_list(),
+            data_frame['y'].to_list(),
+            data_frame['z'].to_list()
         )
     def __init__(self, x:list[float], y:list[float], z:list[float]):
         self.x = x
@@ -52,10 +52,10 @@ class DataXYZ:
 def parse_contents(contents, filename) -> DataXYZ|None:
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
+
     # Assume the user uploaded a CSV file
     if '.csv' in filename:
         df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
-        print(df.info)
         return DataXYZ.from_dataframe(df)
     
     elif '.txt' in filename:
@@ -69,29 +69,27 @@ def parse_contents(contents, filename) -> DataXYZ|None:
 
 @callback(
     Output(ids.Store.UPLOADED_FILES, 'data', allow_duplicate=True),
+    Output(ids.Div.INFO, 'children', allow_duplicate=True),
     Input(ids.Upload.DRAG_N_DROP, 'contents'),
     State(ids.Upload.DRAG_N_DROP, 'filename'),
     State(ids.Store.UPLOADED_FILES, 'data'),
     prevent_initial_call=True,
 )
 def update_uploaded_files(contents, filename:str, current_data:dict):
-    print("Run - update_uploaded_files")
-
+    
     # check if the 'contents' is NOT none
     if contents != None:
-        print('- contents != None')
-
+        
         # iterate over the contents and filename pairs
         for content, file in zip(contents, filename):
 
             # check if the file is already loaded
             if file not in current_data:
-                #data = parse_contents(content, file)
-                data = [1, 2, 3]
+                data = parse_contents(content, file)
 
                 # check if 'data' is NOT none
                 if data:
-                    print(f"- data added: {file}")
-                    current_data[file] = data
+                    current_data[file] = data.to_dict()
         
-        return current_data
+        return current_data, html.Div("Uploaded: " + ', '.join([name for name in filename]))
+    

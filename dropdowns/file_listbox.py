@@ -13,7 +13,6 @@ file_listbox = dcc.Dropdown(id=ids.DropDown.UPLOADED_FILES)
     prevent_initial_call=True,
 )
 def update_listbox(current_data) -> list[str]:
-    print('update_listbox')
     entries = list(current_data.keys())
 
     return sorted(entries)
