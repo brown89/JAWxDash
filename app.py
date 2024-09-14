@@ -1,7 +1,8 @@
-from dash import Dash, html 
+from dash import Dash, dcc, html 
 
 
 # Local import
+import ids
 from uploads.drag_n_drop import drag_n_drop
 from dropdowns.file_listbox import file_listbox
 from divs.info_panel import info_panel
@@ -13,6 +14,9 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([
+    # Initiating 'Store' for holding uploaded files i.e. *.txt and *.csv
+    dcc.Store(id=ids.Store.UPLOADED_FILES, data={}),
+
     # Left column
     html.Div([
         drag_n_drop,

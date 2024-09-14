@@ -1,8 +1,8 @@
 # Package import
 from dash import dcc, html, callback, Output, Input, State
-#import base64
-#import io
-#import pandas as pd
+import base64
+import io
+import pandas as pd
 
 # Local import
 import ids
@@ -27,15 +27,69 @@ drag_n_drop = dcc.Upload(
     multiple=True
 )
 
+# Base data structure for xyz-data
+class DataXYZ:
+
+    @classmethod
+    def from_dataframe(cls, data_frame:pd.DataFrame):
+        return DataXYZ(
+            data_frame['x'].to_list(),
+            data_frame['y'].to_list(),
+            data_frame['z'].to_list()
+        )
+    def __init__(self, x:list[float], y:list[float], z:list[float]):
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    def to_dict(self):
+        return {
+            'x': self.x,
+            'y': self.y,
+            'z': self.z
+        }
+
+def parse_contents(contents, filename) -> DataXYZ|None:
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+
+    # Assume the user uploaded a CSV file
+    if '.csv' in filename:
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+        return DataXYZ.from_dataframe(df)
+    
+    elif '.txt' in filename:
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), delimiter='\t')
+        return DataXYZ.from_dataframe(df)
+    
+    else:
+        # File type NOT supported
+        return None
+    
+
 @callback(
-    Output(ids.DropDown.UPLOADED_FILES, 'options', allow_duplicate=True),
+    Output(ids.Store.UPLOADED_FILES, 'data', allow_duplicate=True),
+    Output(ids.Div.INFO, 'children', allow_duplicate=True),
     Input(ids.Upload.DRAG_N_DROP, 'contents'),
     State(ids.Upload.DRAG_N_DROP, 'filename'),
-    State(ids.DropDown.UPLOADED_FILES, 'options'),
-    prevent_initial_call=True
+    State(ids.Store.UPLOADED_FILES, 'data'),
+    prevent_initial_call=True,
 )
-def update_dropdown(contents, dropped_files, current_files):
+def update_uploaded_files(contents, filename:str, current_data:dict):
+    
+    # check if the 'contents' is NOT none
     if contents != None:
-        new_files = [name for name in dropped_files]
+        
+        # iterate over the contents and filename pairs
+        for content, file in zip(contents, filename):
 
-    return sorted(current_files + new_files) if current_files else sorted(new_files)
+            # check if the file is already loaded
+            if file not in current_data:
+                data = parse_contents(content, file)
+
+                # check if 'data' is NOT none
+                if data:
+                    current_data[file] = data.to_dict()
+        
+        return current_data, html.Div("Uploaded: " + ', '.join([name for name in filename]))
+    
