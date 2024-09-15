@@ -5,4 +5,4 @@ from dash import dcc
 import ids
 
 
-main_graph = dcc.Graph(id=ids.Graph.MAIN, style={'height': '800px', 'width': '100%'})
+main_graph = dcc.Graph(id=ids.Graph.MAIN, style={'height': '900px', 'width': '100%'})

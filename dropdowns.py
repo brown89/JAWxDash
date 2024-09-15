@@ -46,12 +46,12 @@ def update_graph(selected_file, angle_of_incident, spot_size, current_files):
     
     figure.update_layout(
         xaxis=dict(
-            range=[-5, 5],
+            #range=[-5, 5],
             scaleanchor="y",
             scaleratio=1,
         ),
         yaxis=dict(
-            #range=[-5, 5],
+            range=[-45, 5],
             scaleanchor="x",
             scaleratio=1,
         )
