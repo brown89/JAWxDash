@@ -18,7 +18,7 @@ file_listbox = dcc.Dropdown(
 
 colormaps = dcc.Dropdown(
     id=ids.DropDown.COLORMAPS,
-    options=[colorscale for colorscale in px.colors.named_colorscales()],
+    options=sorted([colorscale for colorscale in px.colors.named_colorscales()]),
     value='viridis',
     multi=False,
     clearable=False,
