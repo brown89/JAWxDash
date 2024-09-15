@@ -71,7 +71,27 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
             range=[-45, 5],
             scaleanchor="x",
             scaleratio=1,
-        )
+        ),
     )
+
+    # Adding a dummy scatter plot to display colorbar
+    figure.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode='markers',
+        marker=dict(
+            size=10,
+            color=[int(min(z_coor)), int(max(z_coor))],
+            showscale=True,
+            colorscale=colormap,
+            colorbar=dict(
+                title="Color Scale",
+                titleside="right",
+                tickvals=[t for t in range(int(min(z_coor)), int(max(z_coor)), 5)],
+                ticks="outside",
+                len=0.8,
+            )
+        )
+    ))
 
     return figure
