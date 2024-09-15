@@ -17,13 +17,18 @@ file_listbox = dcc.Dropdown(id=ids.DropDown.UPLOADED_FILES)
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
     Input(ids.Slider.SPOT_SIZE, 'value'),
     State(ids.Store.UPLOADED_FILES, 'data'),
-    prevent_initial_call=True,
+    #prevent_initial_call=True,
 )
 def update_graph(selected_file, angle_of_incident, spot_size, current_files):
 
     # Ensuring valid selection and file store
     if not selected_file or not current_files:
-        return go.Figure()
+        return go.Figure(
+            layout=go.Layout(
+                xaxis_title='X-axis',
+                yaxis_title='Y-axis',
+            )
+        )
     
     # Retriving data from dcc.Store
     selected_data = current_files[selected_file]
