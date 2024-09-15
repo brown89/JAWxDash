@@ -2,7 +2,7 @@ import plotly.graph_objs as go
 import numpy as np
 
 
-def add_spot(fig:go.Figure, x:float, y:float, d_beam:float, a_incident:float) -> None:
+def add_spot(fig:go.Figure, x:float, y:float, c, d_beam:float, a_incident:float) -> None:
 
     minor = d_beam
     major = d_beam / np.cos(np.deg2rad(a_incident))
@@ -18,6 +18,11 @@ def add_spot(fig:go.Figure, x:float, y:float, d_beam:float, a_incident:float) ->
         y0=y0,
         x1=x1,
         y1=y1,
-        fillcolor='rgba(255, 0, 0, 0.5)',
+        line=dict(
+            color=c,
+            width=1,
+            dash='solid',
+        ),
+        fillcolor=c,
     )
     return None

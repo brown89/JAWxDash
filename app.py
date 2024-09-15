@@ -4,7 +4,7 @@ from dash import Dash, dcc, html
 # Local import
 import ids
 from uploads import drag_n_drop
-from dropdowns import file_listbox
+from dropdowns import file_listbox, colormaps
 from divs import info_panel
 from buttons import delete_selected
 from sliders import angle_of_incident, spot_size
@@ -46,6 +46,8 @@ app.layout = html.Div([
             angle_of_incident,
             html.H6("Spot size (mm)", style={'textAlign': 'center',}),
             spot_size,
+            html.H6("Colormap", style={'textAlign': 'center',}),
+            colormaps,
         ], 
         style={'width': '20%', 'display': 'inline-block', 'verticalAlign': 'top', 'padding': '10px'}
     ),
