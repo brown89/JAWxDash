@@ -6,7 +6,7 @@ import plotly.express as px
 
 # Local imports
 import ids
-from utilities import add_spot
+from utilities import gen_spot
 
 
 main_graph = dcc.Graph(
@@ -59,11 +59,20 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         ),
     )
 
+    # Generating spots and collecting
+    shapes = []
     for x, y, c in zip(x_coor, y_coor, colors):
-        add_spot(figure, x, y, c, spot_size, angle_of_incident)
+        shapes.append(gen_spot(x, y, c, spot_size, angle_of_incident))
     
+    # Adding spots to figure
+    figure.update_layout(
+        shapes=shapes,
+    )
+
+    # Updating layout to have axis ratio 1:1
     figure.update_layout(
         xaxis=dict(
+            range=[-15, 15],
             scaleanchor="y",
             scaleratio=1,
         ),
