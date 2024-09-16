@@ -69,15 +69,24 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         shapes=shapes,
     )
 
+    # Calculating zoom window
+    x_min, x_max = min(x_coor), max(x_coor)
+    y_min, y_max = min(y_coor), max(y_coor)
+
+    width = x_max - x_min
+    height = y_max - y_min
+
+    scale = 0.2  # scale factor for amount of padding
+
     # Updating layout to have axis ratio 1:1
     figure.update_layout(
         xaxis=dict(
-            range=[-15, 15],
+            range=[x_min-scale*width, x_max+scale*width],
             scaleanchor="y",
             scaleratio=1,
         ),
         yaxis=dict(
-            range=[-45, 5],
+            range=[y_min-scale*height, y_max+scale*height],
             scaleanchor="x",
             scaleratio=1,
         ),
