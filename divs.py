@@ -1,4 +1,4 @@
-from dash import html, callback, Output, Input
+from dash import html
 
 import ids
 

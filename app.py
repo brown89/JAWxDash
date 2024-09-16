@@ -27,7 +27,12 @@ app.layout = html.Div([
             file_listbox,
             delete_selected,
         ], 
-        style={'width': '15%', 'display': 'inline-block', 'verticalAlign': 'top', 'padding': '10px'}
+        style={
+            'width': '15%', 
+            'display': 'inline-block', 
+            'verticalAlign': 'top', 
+            'padding': '10px'
+        }
     ),
 
     # Middle column
@@ -36,7 +41,12 @@ app.layout = html.Div([
             # Main graph window
             main_graph,
         ], 
-        style={'width': '60%', 'display': 'inline-block', 'verticalAlign': 'top', 'padding': '10px'}
+        style={
+            'width': '60%', 
+            'display': 'inline-block', 
+            'verticalAlign': 'top', 
+            'padding': '10px'
+        }
     ),
 
     # Right column
@@ -49,7 +59,12 @@ app.layout = html.Div([
             html.H6("Colormap", style={'textAlign': 'center',}),
             colormaps,
         ], 
-        style={'width': '20%', 'display': 'inline-block', 'verticalAlign': 'top', 'padding': '10px'}
+        style={
+            'width': '20%', 
+            'display': 'inline-block', 
+            'verticalAlign': 'top', 
+            'padding': '10px'
+        }
     ),
     
     # Bottom info panel
