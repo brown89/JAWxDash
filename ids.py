@@ -1,6 +1,8 @@
 class DropDown:
     UPLOADED_FILES = "dropdown_uploaded_files"
     COLORMAPS = "dropdown_colormaps"
+    SAMPLE_OUTLINE = "dropdown_sample_outline"
+    
 
 class Upload:
     DRAG_N_DROP = "upload_drag_n_drop"

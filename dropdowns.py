@@ -23,3 +23,11 @@ colormaps = dcc.Dropdown(
     multi=False,
     clearable=False,
 )
+
+
+sample_outline = dcc.Dropdown(
+    id=ids.DropDown.SAMPLE_OUTLINE,
+    options=[],
+    multi=False,
+    clearable=True,
+)

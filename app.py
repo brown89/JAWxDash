@@ -1,10 +1,10 @@
 from dash import Dash, dcc, html 
-
+import plotly.graph_objs as go
 
 # Local import
 import ids
 from uploads import drag_n_drop
-from dropdowns import file_listbox, colormaps
+from dropdowns import file_listbox, colormaps, sample_outline
 from divs import info_panel
 from buttons import delete_selected
 from sliders import angle_of_incident, spot_size
@@ -13,6 +13,7 @@ from stores import files_store
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -58,6 +59,8 @@ app.layout = html.Div([
             spot_size,
             html.H6("Colormap", style={'textAlign': 'center',}),
             colormaps,
+            html.H6("Sample Outline", style={'textAlign': 'center',}),
+            sample_outline,
         ], 
         style={
             'width': '20%', 

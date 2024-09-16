@@ -6,12 +6,29 @@ import plotly.express as px
 
 # Local imports
 import ids
-from utilities import gen_spot
+from utilities import gen_spot, find_data_by_attribute
 
 
+# Initializing the plotly figure with axis titles
+figure = go.Figure(
+    layout=go.Layout(
+        xaxis_title='X-axis (mm)',
+        yaxis_title='Y-axis (mm)',
+    ),
+)
+
+# Adding a dummy placeholder for colormap
+figure.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        name='colormap_placeholder',
+    ))
+
+# Setting dcc.Graph object
 main_graph = dcc.Graph(
     id=ids.Graph.MAIN, 
-    style={'height': '900px', 'width': '100%'}
+    style={'height': '900px', 'width': '100%'},
+    figure=figure,
 )
 
 @callback(
@@ -21,18 +38,16 @@ main_graph = dcc.Graph(
     Input(ids.Slider.SPOT_SIZE, 'value'),
     Input(ids.DropDown.COLORMAPS, 'value'),
     State(ids.Store.UPLOADED_FILES, 'data'),
-    #prevent_initial_call=True,
+    State(ids.Graph.MAIN, 'figure'),
+    prevent_initial_call=True,
 )
-def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, current_files) -> go.Figure:
+def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, current_files, figure) -> go.Figure:
 
     # Ensuring valid selection and file store
     if not selected_file or not current_files:
-        return go.Figure(
-            layout=go.Layout(
-                xaxis_title='X-axis (mm)',
-                yaxis_title='Y-axis (mm)',
-            )
-        )
+        return None
+    
+    figure = go.Figure(figure)
     
     # Retriving data from dcc.Store
     selected_data = current_files[selected_file]
@@ -50,25 +65,11 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     colormap = selected_colormap
     colors = px.colors.sample_colorscale(colormap, z_norm)
 
-    # Creating a scatter plot
-    figure = go.Figure(
-        layout=go.Layout(
-            title=f'Selected File: {selected_file}',
-            xaxis_title='X-axis (mm)',
-            yaxis_title='Y-axis (mm)',
-        ),
-    )
-
     # Generating spots and collecting
     shapes = []
     for x, y, c in zip(x_coor, y_coor, colors):
         shapes.append(gen_spot(x, y, c, spot_size, angle_of_incident))
     
-    # Adding spots to figure
-    figure.update_layout(
-        shapes=shapes,
-    )
-
     # Calculating zoom window
     x_min, x_max = min(x_coor), max(x_coor)
     y_min, y_max = min(y_coor), max(y_coor)
@@ -78,8 +79,13 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
 
     scale = 0.2  # scale factor for amount of padding
 
-    # Updating layout to have axis ratio 1:1
+    # Updating layout with
+    # - title
+    # - shapes
+    # - axis ratio 1:1
     figure.update_layout(
+        title=f"Selected file: {selected_file}",
+        shapes=shapes,
         xaxis=dict(
             range=[x_min-scale*width, x_max+scale*width],
             scaleanchor="y",
@@ -93,9 +99,8 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     )
 
     # Adding a dummy scatter plot to display colorbar
-    figure.add_trace(go.Scatter(
-        x=[None],
-        y=[None],
+    data = find_data_by_attribute(figure, "name", "colormap_placeholder")
+    data.update(
         mode='markers',
         marker=dict(
             size=10,
@@ -110,6 +115,6 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
                 len=0.8,
             )
         )
-    ))
+    )
 
     return figure
