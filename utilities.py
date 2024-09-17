@@ -24,6 +24,7 @@ def gen_spot(x:float, y:float, color, dia_beam:float, angle_incident:float) -> d
             dash='solid',
         ),
         fillcolor=color,
+        name="spot",
     )
 
 

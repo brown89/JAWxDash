@@ -1,8 +1,6 @@
-from dash import Dash, dcc, html 
-import plotly.graph_objs as go
+from dash import Dash, html
 
 # Local import
-import ids
 from uploads import drag_n_drop
 from dropdowns import file_listbox, colormaps, sample_outline
 from divs import info_panel

@@ -15,6 +15,14 @@ figure = go.Figure(
     layout=go.Layout(
         xaxis_title='X-axis (mm)',
         yaxis_title='Y-axis (mm)',
+        xaxis=dict(
+            scaleanchor="y",
+            scaleratio=1,
+        ),
+        yaxis=dict(
+            scaleanchor="x",
+            scaleratio=1,
+        ),
     ),
 )
 
@@ -95,13 +103,13 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         shapes=shapes,
         xaxis=dict(
             range=[x_min-scale*width, x_max+scale*width],
-            scaleanchor="y",
-            scaleratio=1,
+            #scaleanchor="y",
+            #scaleratio=1,
         ),
         yaxis=dict(
             range=[y_min-scale*height, y_max+scale*height],
-            scaleanchor="x",
-            scaleratio=1,
+            #scaleanchor="x",
+            #scaleratio=1,
         ),
     )
 
