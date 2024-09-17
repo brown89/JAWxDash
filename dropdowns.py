@@ -5,6 +5,7 @@ import plotly.express as px
 
 # Local import
 import ids
+from sample_outlines import sample_outlines
 
 
 file_listbox = dcc.Dropdown(
@@ -27,7 +28,7 @@ colormaps = dcc.Dropdown(
 
 sample_outline = dcc.Dropdown(
     id=ids.DropDown.SAMPLE_OUTLINE,
-    options=[],
+    options=list(sample_outlines.keys()),
     multi=False,
     clearable=True,
 )

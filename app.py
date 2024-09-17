@@ -59,7 +59,7 @@ app.layout = html.Div([
             spot_size,
             html.H6("Colormap", style={'textAlign': 'center',}),
             colormaps,
-            html.H6("Sample Outline", style={'textAlign': 'center',}),
+            html.H6("Sample outline", style={'textAlign': 'center',}),
             sample_outline,
         ], 
         style={

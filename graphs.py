@@ -6,7 +6,8 @@ import plotly.express as px
 
 # Local imports
 import ids
-from utilities import gen_spot, find_data_by_attribute
+from utilities import gen_spot, find_data_by_attribute, delete_shape_by_attribute
+from sample_outlines import sample_outlines
 
 
 # Initializing the plotly figure with axis titles
@@ -17,12 +18,18 @@ figure = go.Figure(
     ),
 )
 
-# Adding a dummy placeholder for colormap
+# Adding a placeholder for colormap
 figure.add_trace(go.Scatter(
         x=[None],
         y=[None],
         name='colormap_placeholder',
     ))
+
+# Adding a placeholder for sample outline
+# 8in wafer
+r = 1*25.4
+
+
 
 # Setting dcc.Graph object
 main_graph = dcc.Graph(
@@ -32,7 +39,7 @@ main_graph = dcc.Graph(
 )
 
 @callback(
-    Output(ids.Graph.MAIN, 'figure'),
+    Output(ids.Graph.MAIN, 'figure', allow_duplicate=True),
     Input(ids.DropDown.UPLOADED_FILES, 'value'),
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
     Input(ids.Slider.SPOT_SIZE, 'value'),
@@ -116,5 +123,35 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
             )
         )
     )
+
+    return figure
+
+
+@callback(
+    Output(ids.Graph.MAIN, 'figure'),
+    Input(ids.DropDown.SAMPLE_OUTLINE, 'value'),
+    State(ids.Graph.MAIN, 'figure'),
+    prevent_initial_call=True,
+)
+def update_sample_outline(selected_outline:str, figure:dict) -> go.Figure:
+
+    # Converting the figure from dict to go.Figure
+    figure = go.Figure(figure)
+
+    # If no outline selected return the same figure
+    if not selected_outline:
+        return figure
+    
+    # Deletes shape if exist
+    figure = delete_shape_by_attribute(figure, "name", "sample_outline")
+
+    # Creates new "sample_outline" and adds it to the figure
+    shape = sample_outlines[selected_outline]
+    figure.add_shape(
+        shape
+    )
+
+    # Explicit update of the figure
+    figure.update_layout()
 
     return figure
