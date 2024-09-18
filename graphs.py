@@ -80,8 +80,10 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     colormap = selected_colormap
     colors = px.colors.sample_colorscale(colormap, z_norm)
 
+    # Delete shapes with "name"="spot"
+    shapes = delete_shape_by_attribute(figure, "name", "spot")
+    
     # Generating spots and collecting
-    shapes = []
     for x, y, c in zip(x_coor, y_coor, colors):
         shapes.append(gen_spot(x, y, c, spot_size, angle_of_incident))
     
@@ -96,11 +98,10 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
 
     # Updating layout with
     # - title
-    # - shapes
-    # - axis ratio 1:1
+    # - adjusted zoom window
     figure.update_layout(
         title=f"Selected file: {selected_file}",
-        shapes=shapes,
+        shapes=tuple(shapes),
         xaxis=dict(
             range=[x_min-scale*width, x_max+scale*width],
             #scaleanchor="y",
@@ -151,15 +152,17 @@ def update_sample_outline(selected_outline:str, figure:dict) -> go.Figure:
         return figure
     
     # Deletes shape if exist
-    figure = delete_shape_by_attribute(figure, "name", "sample_outline")
+    shapes = delete_shape_by_attribute(figure, "name", "sample_outline")
 
     # Creates new "sample_outline" and adds it to the figure
     shape = sample_outlines[selected_outline]
-    figure.add_shape(
-        shape
-    )
+    
+    # Add outline to list of shapes
+    shapes.append(shape)
 
     # Explicit update of the figure
-    figure.update_layout()
+    figure.update_layout(
+        shapes=tuple(shapes),
+    )
 
     return figure

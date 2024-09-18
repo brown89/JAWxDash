@@ -39,8 +39,12 @@ def find_shape_by_attribute(figure:go.Figure, attribute:str, value:str):
     return None
 
 
-def delete_shape_by_attribute(figure:go.Figure, attribute:str, value:str) -> go.Figure:
+def delete_shape_by_attribute(figure:go.Figure, attribute:str, value:str) -> list:
 
+    # If list empty return empty list
+    if not figure.layout.shapes:
+        return []
+    
     # Collecting index of the shapes matching the attribute value
     to_delete = []
     for i, shape in enumerate(figure.layout.shapes):
@@ -54,9 +58,7 @@ def delete_shape_by_attribute(figure:go.Figure, attribute:str, value:str) -> go.
         shapes.pop(i)
     
     # Setting the shapes
-    figure.layout.shapes = tuple(shapes)
-
-    return figure
+    return shapes
 
 
 def find_data_by_attribute(figure:go.Figure, attribute:str, value:str):
