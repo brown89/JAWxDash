@@ -61,12 +61,16 @@ def delete_shape_by_attribute(figure:go.Figure, attribute:str, value:str) -> lis
     return shapes
 
 
-def find_data_by_attribute(figure:go.Figure, attribute:str, value:str):
+def find_trace_by_attribute(figure:go.Figure, attribute:str, value:str):
 
-    # Loops through shapes in figure layout
-    for data in figure.data:
-        if hasattr(data, attribute):
-            if getattr(data, attribute) == value:
-                return data
+    # Loops through data in figure layout
+    for trace in figure.data:
+
+        # Check to see if attribute is present
+        if hasattr(trace, attribute):
+
+            # Check if attribute value matches
+            if getattr(trace, attribute) == value:
+                return trace
     
     return None

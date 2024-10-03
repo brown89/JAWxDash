@@ -6,7 +6,7 @@ import plotly.express as px
 
 # Local imports
 import ids
-from utilities import gen_spot, find_data_by_attribute, delete_shape_by_attribute
+from utilities import gen_spot, find_trace_by_attribute, delete_shape_by_attribute
 from sample_outlines import sample_outlines
 
 
@@ -52,12 +52,11 @@ main_graph = dcc.Graph(
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
     Input(ids.Slider.SPOT_SIZE, 'value'),
     Input(ids.DropDown.COLORMAPS, 'value'),
-    Input(ids.DropDown.SAMPLE_OUTLINE, 'value'),
+    State(ids.DropDown.SAMPLE_OUTLINE, 'value'),
     State(ids.Store.UPLOADED_FILES, 'data'),
-    State(ids.Graph.MAIN, 'figure'),
     prevent_initial_call=True,
 )
-def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, selected_outline:str, current_files, figure) -> go.Figure:
+def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, selected_outline:str, current_files) -> go.Figure:
     """
     Updates the graph object uppon changes to one of the following:
     - File dropdown
@@ -72,8 +71,7 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     if not selected_file or not current_files:
         return None
     
-    figure = go.Figure(figure)
-    
+        
     # Retriving data from dcc.Store
     selected_data = current_files[selected_file]
 
@@ -110,27 +108,35 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
 
     scale = 0.2  # scale factor for amount of padding
 
-    # Updating layout with
-    # - title
-    # - adjusted zoom window
-    figure.update_layout(
-        title=f"Selected file: {selected_file}",
-        shapes=tuple(shapes),
-        xaxis=dict(
-            range=[x_min-scale*width, x_max+scale*width],
-            #scaleanchor="y",
-            #scaleratio=1,
-        ),
-        yaxis=dict(
-            range=[y_min-scale*height, y_max+scale*height],
-            #scaleanchor="x",
-            #scaleratio=1,
+    figure = go.Figure(
+        layout=go.Layout(
+            title=f"Selected file: {selected_file}",
+            shapes=tuple(shapes),
+            xaxis_title='X-axis (mm)',
+            yaxis_title='Y-axis (mm)',
+            xaxis=dict(
+                range=[x_min-scale*width, x_max+scale*width],
+                scaleanchor="y",
+                scaleratio=1,
+            ),
+            yaxis=dict(
+                range=[y_min-scale*height, y_max+scale*height],
+                scaleanchor="x",
+                scaleratio=1,
+            ),
         ),
     )
+    
 
     # Adding a dummy scatter plot to display colorbar
-    data = find_data_by_attribute(figure, "name", "colormap_placeholder")
-    data.update(
+    figure.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        name='colormap_placeholder',
+    ))
+    
+    trace = find_trace_by_attribute(figure, "name", "colormap_placeholder")
+    trace.update(
         mode='markers',
         marker=dict(
             size=10,
@@ -146,5 +152,37 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
             )
         )
     )
+
+    return figure
+
+
+@callback(
+    Output(ids.Graph.MAIN, 'figure'),
+    Input(ids.DropDown.SAMPLE_OUTLINE, 'value'),
+    State(ids.Graph.MAIN, 'figure'),
+    prevent_initial_call=True,
+)
+def update_sample_outline(selected_outline:str, figure:dict) -> go.Figure:
+
+    # Converting the figure from dict to go.Figure
+    figure = go.Figure(figure)
+
+    # If no outline selected return the same figure
+    if not selected_outline:
+        return figure
+    
+    # Deletes shape if exist
+    shapes = delete_shape_by_attribute(figure, "name", "sample_outline")
+
+    # Creates new "sample_outline" and adds it to the figure
+    shape = sample_outlines[selected_outline]
+    
+    # Add outline to list of shapes
+    shapes.append(shape)
+
+    # Explicit update of the figure
+    figure.layout.shapes = shapes
+        #shapes=tuple(shapes),
+    #)
 
     return figure
