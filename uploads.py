@@ -1,7 +1,9 @@
 # Package import
 from dash import dcc, html, callback, Output, Input, State
 import base64
+from dataclasses import dataclass
 import io
+import numpy as np
 import pandas as pd
 
 # Local import
@@ -27,6 +29,7 @@ drag_n_drop = dcc.Upload(
     multiple=True
 )
 
+
 # Base data structure for xyz-data
 class DataXYZ:
 
@@ -37,7 +40,8 @@ class DataXYZ:
             data_frame['y'].to_list(),
             data_frame['z'].to_list()
         )
-    def __init__(self, x:list[float], y:list[float], z:list[float]):
+    
+    def __init__(self, x:list[float], y:list[float], z:list[float]) -> None:
         self.x = x
         self.y = y
         self.z = z
@@ -46,8 +50,9 @@ class DataXYZ:
         return {
             'x': self.x,
             'y': self.y,
-            'z': self.z
+            'z': self.z,
         }
+
 
 def parse_contents(contents, filename) -> DataXYZ|None:
     content_type, content_string = contents.split(',')

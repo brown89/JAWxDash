@@ -52,12 +52,22 @@ main_graph = dcc.Graph(
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
     Input(ids.Slider.SPOT_SIZE, 'value'),
     Input(ids.DropDown.COLORMAPS, 'value'),
+    Input(ids.DropDown.SAMPLE_OUTLINE, 'value'),
     State(ids.Store.UPLOADED_FILES, 'data'),
     State(ids.Graph.MAIN, 'figure'),
     prevent_initial_call=True,
 )
-def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, current_files, figure) -> go.Figure:
+def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, selected_outline:str, current_files, figure) -> go.Figure:
+    """
+    Updates the graph object uppon changes to one of the following:
+    - File dropdown
+    - Angle of incident
+    - Spot size
+    - Colormap dropdown
+    - Sample outline
 
+
+    """
     # Ensuring valid selection and file store
     if not selected_file or not current_files:
         return None
@@ -73,19 +83,23 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     z_coor = np.asarray(selected_data['z'])
 
     # Normalizing z_coor to colors
-    z_offset = z_coor - min(z_coor)
-    z_norm = z_offset/max(z_offset)
+    z_baseline = z_coor - min(z_coor)
+    z_normalized = z_baseline/max(z_baseline)
 
     # Making colors
     colormap = selected_colormap
-    colors = px.colors.sample_colorscale(colormap, z_norm)
+    colors = px.colors.sample_colorscale(colormap, z_normalized)
 
-    # Delete shapes with "name"="spot"
-    shapes = delete_shape_by_attribute(figure, "name", "spot")
+    # Initializing list of shapes
+    shapes = []
     
     # Generating spots and collecting
     for x, y, c in zip(x_coor, y_coor, colors):
         shapes.append(gen_spot(x, y, c, spot_size, angle_of_incident))
+    
+    # Generating outline if any
+    if selected_outline:
+        shapes.append(sample_outlines[selected_outline])
     
     # Calculating zoom window
     x_min, x_max = min(x_coor), max(x_coor)
@@ -131,38 +145,6 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
                 len=0.8,
             )
         )
-    )
-
-    return figure
-
-
-@callback(
-    Output(ids.Graph.MAIN, 'figure'),
-    Input(ids.DropDown.SAMPLE_OUTLINE, 'value'),
-    State(ids.Graph.MAIN, 'figure'),
-    prevent_initial_call=True,
-)
-def update_sample_outline(selected_outline:str, figure:dict) -> go.Figure:
-
-    # Converting the figure from dict to go.Figure
-    figure = go.Figure(figure)
-
-    # If no outline selected return the same figure
-    if not selected_outline:
-        return figure
-    
-    # Deletes shape if exist
-    shapes = delete_shape_by_attribute(figure, "name", "sample_outline")
-
-    # Creates new "sample_outline" and adds it to the figure
-    shape = sample_outlines[selected_outline]
-    
-    # Add outline to list of shapes
-    shapes.append(shape)
-
-    # Explicit update of the figure
-    figure.update_layout(
-        shapes=tuple(shapes),
     )
 
     return figure
