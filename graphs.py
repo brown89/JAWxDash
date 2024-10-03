@@ -6,7 +6,7 @@ import plotly.express as px
 
 # Local imports
 import ids
-from utilities import gen_spot, find_trace_by_attribute, delete_shape_by_attribute
+from utilities import DataXYZ, gen_spot, find_trace_by_attribute, delete_shape_by_attribute
 from sample_outlines import sample_outlines
 
 
@@ -75,24 +75,18 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     # Retriving data from dcc.Store
     selected_data = current_files[selected_file]
 
-    # Retriving x and y coordinates
-    x_coor = selected_data['x']
-    y_coor = selected_data['y']
-    z_coor = np.asarray(selected_data['z'])
-
-    # Normalizing z_coor to colors
-    z_baseline = z_coor - min(z_coor)
-    z_normalized = z_baseline/max(z_baseline)
+    # Retriving data
+    data = DataXYZ.from_dict(selected_data)
 
     # Making colors
     colormap = selected_colormap
-    colors = px.colors.sample_colorscale(colormap, z_normalized)
+    colors = px.colors.sample_colorscale(colormap, data.z_normalized())
 
     # Initializing list of shapes
     shapes = []
     
     # Generating spots and collecting
-    for x, y, c in zip(x_coor, y_coor, colors):
+    for x, y, c in zip(data.x, data.y, colors):
         shapes.append(gen_spot(x, y, c, spot_size, angle_of_incident))
     
     # Generating outline if any
@@ -100,14 +94,12 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         shapes.append(sample_outlines[selected_outline])
     
     # Calculating zoom window
-    x_min, x_max = min(x_coor), max(x_coor)
-    y_min, y_max = min(y_coor), max(y_coor)
-
-    width = x_max - x_min
-    height = y_max - y_min
+    x_min, x_max = min(data.x), max(data.x)
+    y_min, y_max = min(data.y), max(data.y)
 
     scale = 0.2  # scale factor for amount of padding
 
+    # Creating a new figure object
     figure = go.Figure(
         layout=go.Layout(
             title=f"Selected file: {selected_file}",
@@ -115,12 +107,12 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
             xaxis_title='X-axis (mm)',
             yaxis_title='Y-axis (mm)',
             xaxis=dict(
-                range=[x_min-scale*width, x_max+scale*width],
+                range=[x_min-scale*data.width(), x_max+scale*data.width()],
                 scaleanchor="y",
                 scaleratio=1,
             ),
             yaxis=dict(
-                range=[y_min-scale*height, y_max+scale*height],
+                range=[y_min-scale*data.height(), y_max+scale*data.height()],
                 scaleanchor="x",
                 scaleratio=1,
             ),
@@ -132,27 +124,23 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     figure.add_trace(go.Scatter(
         x=[None],
         y=[None],
-        name='colormap_placeholder',
-    ))
-    
-    trace = find_trace_by_attribute(figure, "name", "colormap_placeholder")
-    trace.update(
         mode='markers',
         marker=dict(
             size=10,
-            color=[int(min(z_coor)), int(max(z_coor))],
+            color=[int(min(data.z)), int(max(data.z))],
             showscale=True,
             colorscale=colormap,
             colorbar=dict(
                 title="Color Scale",
                 titleside="right",
-                tickvals=[t for t in range(int(min(z_coor)), int(max(z_coor)), 5)],
+                tickvals=[t for t in range(int(min(data.z)), int(max(data.z)), 5)],
                 ticks="outside",
                 len=0.8,
             )
-        )
-    )
-
+        ),
+        name='colormap_placeholder',
+    ))
+    
     return figure
 
 

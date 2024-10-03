@@ -1,6 +1,7 @@
 # Library imports
 import plotly.graph_objs as go
 import numpy as np
+import pandas as pd
 
 
 def gen_spot(x:float, y:float, color, dia_beam:float, angle_incident:float) -> dict:
@@ -74,3 +75,50 @@ def find_trace_by_attribute(figure:go.Figure, attribute:str, value:str):
                 return trace
     
     return None
+
+
+# Base data structure for xyz-data
+class DataXYZ:
+
+    @classmethod
+    def from_dataframe(cls, data_frame:pd.DataFrame):
+        return DataXYZ(
+            data_frame['x'].to_list(),
+            data_frame['y'].to_list(),
+            data_frame['z'].to_list()
+        )
+    
+
+    @classmethod
+    def from_dict(cls, data_xyz:dict) -> "DataXYZ":
+        return DataXYZ(
+            data_xyz['x'],
+            data_xyz['y'],
+            data_xyz['z']
+        )
+    
+    
+    def __init__(self, x:list[float], y:list[float], z:list[float]) -> None:
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    def to_dict(self):
+        return {
+            'x': self.x,
+            'y': self.y,
+            'z': self.z,
+        }
+    
+    def z_normalized(self) -> list:
+        z_baseline = [z - min(self.z) for z in self.z]
+        z_max = max(z_baseline)
+        return [z/z_max for z in z_baseline]
+    
+
+    def width(self) -> float:
+        return max(self.x) - min(self.x)
+    
+
+    def height(self) -> float:
+        return max(self.y) - min(self.y)

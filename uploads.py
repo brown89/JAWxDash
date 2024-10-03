@@ -3,11 +3,12 @@ from dash import dcc, html, callback, Output, Input, State
 import base64
 from dataclasses import dataclass
 import io
-import numpy as np
 import pandas as pd
 
 # Local import
 import ids
+from utilities import DataXYZ
+
 
 drag_n_drop = dcc.Upload(
     id=ids.Upload.DRAG_N_DROP,
@@ -29,29 +30,6 @@ drag_n_drop = dcc.Upload(
     multiple=True
 )
 
-
-# Base data structure for xyz-data
-class DataXYZ:
-
-    @classmethod
-    def from_dataframe(cls, data_frame:pd.DataFrame):
-        return DataXYZ(
-            data_frame['x'].to_list(),
-            data_frame['y'].to_list(),
-            data_frame['z'].to_list()
-        )
-    
-    def __init__(self, x:list[float], y:list[float], z:list[float]) -> None:
-        self.x = x
-        self.y = y
-        self.z = z
-    
-    def to_dict(self):
-        return {
-            'x': self.x,
-            'y': self.y,
-            'z': self.z,
-        }
 
 
 def parse_contents(contents, filename) -> DataXYZ|None:
