@@ -53,7 +53,7 @@ main_graph = dcc.Graph(
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
     Input(ids.Slider.SPOT_SIZE, 'value'),
     Input(ids.DropDown.COLORMAPS, 'value'),
-    State(ids.DropDown.SAMPLE_OUTLINE, 'value'),
+    State(ids.DropDown.SAMPLE_OUTLINE, 'value'), # Sample outline as an input is handled seperatly
     State(ids.Store.UPLOADED_FILES, 'data'),
     prevent_initial_call=True,
 )
@@ -83,12 +83,12 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     colormap = selected_colormap
     colors = px.colors.sample_colorscale(colormap, data.z_normalized())
 
-    # Initializing list of shapes
-    shapes = []
-    
-    # Generating spots and collecting
-    for x, y, c in zip(data.x, data.y, colors):
-        shapes.append(gen_spot(x, y, c, spot_size, angle_of_incident))
+    # Initializing list of shapes + Generating spots and collecting
+    shapes = [
+        gen_spot(x, y, c, spot_size, angle_of_incident) 
+        for x, y, c 
+        in zip(data.x, data.y, colors)
+    ]
     
     # Generating outline if any
     if selected_outline:
