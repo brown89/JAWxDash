@@ -1,13 +1,9 @@
 # Package import
 from dash import dcc, html, callback, Output, Input, State
-import base64
-from dataclasses import dataclass
-import io
-import pandas as pd
 
 # Local import
 import ids
-from utilities import DataXYZ
+from readers import parse_contents
 
 
 drag_n_drop = dcc.Upload(
@@ -31,24 +27,6 @@ drag_n_drop = dcc.Upload(
 )
 
 
-
-def parse_contents(contents, filename) -> DataXYZ|None:
-    content_type, content_string = contents.split(',')
-    decoded = base64.b64decode(content_string)
-
-    # Assume the user uploaded a CSV file
-    if '.csv' in filename:
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
-        return DataXYZ.from_dataframe(df)
-    
-    elif '.txt' in filename:
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), delimiter='\t')
-        return DataXYZ.from_dataframe(df)
-    
-    else:
-        # File type NOT supported
-        return None
-    
 
 @callback(
     Output(ids.Store.UPLOADED_FILES, 'data', allow_duplicate=True),

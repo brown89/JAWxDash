@@ -6,7 +6,8 @@ import plotly.express as px
 
 # Local imports
 import ids
-from utilities import DataXYZ, gen_spot, find_trace_by_attribute, delete_shape_by_attribute
+from utilities import gen_spot, delete_shape_by_attribute
+from readers import DataXYZ
 from sample_outlines import sample_outlines
 
 
