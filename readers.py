@@ -2,33 +2,28 @@ from abc import ABC, abstractmethod
 import base64
 import io
 import pandas as pd
+import re
+import numpy as np
 
 
-
-class BaseDataStruct(ABC):
-
-    @classmethod
-    @abstractmethod
-    def from_dataframe(cls, dataframe:pd.DataFrame) -> "BaseDataStruct":
-        pass
-
+class DataXYC:
 
     @classmethod
-    @abstractmethod
-    def from_dict(cls, data:dict) -> "BaseDataStruct":
-        pass
+    def from_dict(cls, data:dict) -> "DataXYC":
 
-    def __init__(self, x:list[float], y:list[float], z:list[float]):
+        return DataXYC(
+            data['x'],
+            data['y'],
+            data['c'],
+        )
+    
+    def __init__(self, x:list[float], y:list[float], c:dict):
         """
         Base class from which to construct data import types
         """
         self.x = x
         self.y = y
-        self.z = z
-        pass
-
-    @abstractmethod
-    def to_dict(self) -> dict:
+        self.c = c
         pass
 
     
@@ -39,65 +34,122 @@ class BaseDataStruct(ABC):
     def height(self) -> float:
         return max(self.y) - min(self.y)
     
+
+    def z_normalized(self) -> list:
+        # Needs work, but we'll start by accessing the first key in 'c'.
+
+        key0 = list(self.c)[0]
+        z_min, z_max = min(self.c[key0]), max(self.c[key0])
+        diff = z_max - z_min
+        return [(z - z_min) / diff for z in self.c[key0]]
+
+    def to_dict(self) -> dict:
+        return dict(
+            x = self.x,
+            y = self.y,
+            c = self.c,
+        )
 # --- End of BaseDataStruct ---
 
 
-# Simplest implementation of data
-class DataXYZ(BaseDataStruct):
+def read_xyz_csv(file:bytes) -> DataXYC:
+    df = pd.read_csv(io.StringIO(file.decode("utf-8")))
 
-    @classmethod
-    def from_dataframe(cls, data_frame:pd.DataFrame):
-        return DataXYZ(
-            data_frame['x'].to_list(),
-            data_frame['y'].to_list(),
-            data_frame['z'].to_list()
-        )
+    return DataXYC(df.x, df.y, {"z": df.z})
+
+
+def read_xyz_txt(file:bytes) -> DataXYC:
+    df = pd.read_csv(io.StringIO(file.decode('utf-8')), delimiter='\t')
+
+    return DataXYC(df.x, df.y, {'z': df.z})
+
+
+def read_jaw_txt(file:bytes) -> DataXYC:
+
+    # Opening file and reading into list
+    buffer = io.StringIO(file.decode("utf-8"))
+    lines = buffer.readlines()
     
 
-    @classmethod
-    def from_dict(cls, data_xyz:dict) -> "DataXYZ":
-        return DataXYZ(
-            data_xyz['x'],
-            data_xyz['y'],
-            data_xyz['z']
-        )
+    # Find lines with the data, by matching (decimal,decimal)
+
+    # Pattern explanation
+    # \( and \): Match the parentheses that enclose the two numbers.
+    # [+-]?: Matches an optional + or - sign before each number.
+    # \d+\.\d+: Matches a decimal number (one or more digits before and after the decimal point).
+    # ,: Matches the comma separating the two numbers.
+    pattern = r"\([+-]?\d+\.\d+,[+-]?\d+\.\d+\)"
+
+    data_line = False
+    for i, line in enumerate(lines):
+        matches = re.findall(pattern, line)
+        if matches:
+            data_line = i
+            break
     
 
-    def __init__(self, x:list[float], y:list[float], z:list[float]) -> None:
-        super().__init__(x, y, z)
+    # Reading the file with Pandas
+    df = pd.read_csv(io.StringIO(file.decode("utf-8")), delimiter="\t", header=0, skiprows=range(1, data_line))
     
 
-    def to_dict(self):
-        return {
-            'x': self.x,
-            'y': self.y,
-            'z': self.z,
-        }
+    # Renaming columns as to remove none ASCII char, replace white-space with underscore and set all lower caps
+    def header_naming_scheme(dataframe:pd.DataFrame) -> pd.DataFrame:
+        
+        headers = {}
+        for header in dataframe.columns:
+
+            # Replacing white-space and setting to lower case
+            new_header = header.replace(" ", "_").strip()
+
+            # Removing non ASCII characters
+            new_header = ''.join(c for c in new_header if ord(c) < 128)
+
+            # Saving to 'headers'-dict
+            headers[header] = new_header
+            
+        return dataframe.rename(headers)
+    
+    df = header_naming_scheme(df)
     
 
-    def z_normalized(self) -> list:
-        z_baseline = [z - min(self.z) for z in self.z]
-        z_max = max(z_baseline)
-        return [z/z_max for z in z_baseline]
+    # Extract x and y
+    pattern = r"[+-]?\d+\.\d+"
+    x, y = [], []
+    for xy in df.iloc[:, 0].values.tolist():
+        matches = re.findall(pattern, xy)
 
-# --- End of DataXYZ ---
+        if len(matches) == 2:
+            x.append(float(matches[0]))
+            y.append(float(matches[1]))
+        
+        else:
+            x.append(np.nan)
+            y.append(np.nan)
+
+            print("Woopsie!")
+            print(i, len(matches))
+    
+    df = df.drop(columns=df.columns[0], axis=1)
+
+    # Converting datafram to dictionary
+    c = {}
+    for col in df.columns:
+        c[col] = df[col].to_list()
+    
+
+    return DataXYC(x, y, c)
 
 
-def jaw():
-    pass
-
-def parse_contents(contents, filename) -> DataXYZ|None:
+def parse_contents(contents, filename) -> DataXYC|None:
     content_type, content_string = contents.split(',')
-    bytes = base64.b64decode(content_string)
+    file = base64.b64decode(content_string)
 
     # Assume the user uploaded a CSV file
     if '.csv' in filename:
-        df = pd.read_csv(io.StringIO(bytes.decode('utf-8')))
-        return DataXYZ.from_dataframe(df)
+        return read_xyz_csv(file)
     
     elif '.txt' in filename:
-        df = pd.read_csv(io.StringIO(bytes.decode('utf-8')), delimiter='\t')
-        return DataXYZ.from_dataframe(df)
+        return read_jaw_txt(file)
     
     else:
         # File type NOT supported

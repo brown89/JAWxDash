@@ -1,13 +1,12 @@
 # Library imports
 from dash import dcc, callback, Output, Input, State
-import numpy as np
 import plotly.graph_objs as go
 import plotly.express as px
 
 # Local imports
 import ids
 from utilities import gen_spot, delete_shape_by_attribute
-from readers import DataXYZ
+from readers import DataXYC
 from sample_outlines import sample_outlines
 
 
@@ -72,16 +71,23 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     if not selected_file or not current_files:
         return None
     
-        
+    
     # Retriving data from dcc.Store
     selected_data = current_files[selected_file]
 
     # Retriving data
-    data = DataXYZ.from_dict(selected_data)
+    data = DataXYC.from_dict(selected_data)
+
+    # Static typed first key, needs to be updated
+    key = list(data.c)[0]
+
 
     # Making colors
     colormap = selected_colormap
-    colors = px.colors.sample_colorscale(colormap, data.z_normalized())
+    colors = px.colors.sample_colorscale(
+        colorscale=colormap, 
+        samplepoints=data.z_normalized()
+    )
 
     # Initializing list of shapes + Generating spots and collecting
     shapes = [
@@ -128,13 +134,13 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         mode='markers',
         marker=dict(
             size=10,
-            color=[int(min(data.z)), int(max(data.z))],
+            color=[int(min(data.c[key])), int(max(data.c[key]))],
             showscale=True,
             colorscale=colormap,
             colorbar=dict(
                 title="Color Scale",
                 titleside="right",
-                tickvals=[t for t in range(int(min(data.z)), int(max(data.z)), 5)],
+                tickvals=[t for t in range(int(min(data.c[key])), int(max(data.c[key])), 5)],
                 ticks="outside",
                 len=0.8,
             )
