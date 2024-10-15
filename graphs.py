@@ -2,6 +2,7 @@
 from dash import dcc, callback, Output, Input, State
 import plotly.graph_objs as go
 import plotly.express as px
+import numpy as np
 
 # Local imports
 import ids
@@ -10,19 +11,28 @@ from readers import DataXYC
 from sample_outlines import sample_outlines
 
 
-# Initializing the plotly figure with axis titles
+# template for the figure layout
+FIGURE_LAYOUT = dict(
+    xaxis_title = "X-axis (mm)",
+    yaxis_title = "Y-axis (mm)",
+    xaxis=dict(
+        scaleanchor="y",
+        scaleratio=1,
+    ),
+    yaxis=dict(
+        scaleanchor="x",
+        scaleratio=1,
+    ),
+)
+
+
+CRITICAL_COUNT = 500
+
+
+# Base template for the figure
 figure = go.Figure(
     layout=go.Layout(
-        xaxis_title='X-axis (mm)',
-        yaxis_title='Y-axis (mm)',
-        xaxis=dict(
-            scaleanchor="y",
-            scaleratio=1,
-        ),
-        yaxis=dict(
-            scaleanchor="x",
-            scaleratio=1,
-        ),
+        FIGURE_LAYOUT
     ),
 )
 
@@ -31,16 +41,15 @@ figure.add_trace(go.Scatter(
         x=[None],
         y=[None],
         name='colormap_placeholder',
-    ))
+))
 
 # Adding a placeholder for sample outline
 # 8in wafer
 r = 1*25.4
 
 
-
 # Setting dcc.Graph object
-main_graph = dcc.Graph(
+layout = dcc.Graph(
     id=ids.Graph.MAIN, 
     style={'height': '900px', 'width': '100%'},
     figure=figure,
@@ -81,7 +90,6 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     # Static typed first key, needs to be updated
     key = list(data.c)[0]
 
-
     # Making colors
     colormap = selected_colormap
     colors = px.colors.sample_colorscale(
@@ -89,58 +97,63 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         samplepoints=data.z_normalized()
     )
 
-    # Initializing list of shapes + Generating spots and collecting
-    shapes = [
-        gen_spot(x, y, c, spot_size, angle_of_incident) 
-        for x, y, c 
-        in zip(data.x, data.y, colors)
-    ]
+    shapes = []
+    x = [None]
+    y = [None]
+    marker_color = 'rgb(255,0,0)'
+
+    if data.len() > CRITICAL_COUNT:
+        # Plot at scatter
+        x = data.x
+        y = data.y
+        marker_color = data.c[key]
+
+    
+    else:
+        # Plot as ellipse
+        # Initializing list of shapes + Generating spots and collecting
+        shapes = [
+            gen_spot(x, y, c, spot_size, angle_of_incident) 
+            for x, y, c 
+            in zip(data.x, data.y, colors)
+        ]
+
+    
     
     # Generating outline if any
     if selected_outline:
         shapes.append(sample_outlines[selected_outline])
     
-    # Calculating zoom window
-    x_min, x_max = min(data.x), max(data.x)
-    y_min, y_max = min(data.y), max(data.y)
-
-    scale = 0.2  # scale factor for amount of padding
-
     # Creating a new figure object
+    layout_updates = dict(
+        title = f"Selected file: {selected_file}",
+        shapes = tuple(shapes),
+        xaxis = {'range': data.x_range()} | FIGURE_LAYOUT['xaxis'],
+        yaxis = {'range': data.y_range()} | FIGURE_LAYOUT['yaxis'],
+    )
+ 
     figure = go.Figure(
         layout=go.Layout(
-            title=f"Selected file: {selected_file}",
-            shapes=tuple(shapes),
-            xaxis_title='X-axis (mm)',
-            yaxis_title='Y-axis (mm)',
-            xaxis=dict(
-                range=[x_min-scale*data.width(), x_max+scale*data.width()],
-                scaleanchor="y",
-                scaleratio=1,
-            ),
-            yaxis=dict(
-                range=[y_min-scale*data.height(), y_max+scale*data.height()],
-                scaleanchor="x",
-                scaleratio=1,
-            ),
+            FIGURE_LAYOUT | layout_updates  # Joining the template with the updates
         ),
     )
     
 
     # Adding a dummy scatter plot to display colorbar
     figure.add_trace(go.Scatter(
-        x=[None],
-        y=[None],
+        x=x,
+        y=y,
         mode='markers',
+        marker_color=marker_color,
         marker=dict(
-            size=10,
+            size=5,
             color=[int(min(data.c[key])), int(max(data.c[key]))],
             showscale=True,
             colorscale=colormap,
             colorbar=dict(
                 title="Color Scale",
                 titleside="right",
-                tickvals=[t for t in range(int(min(data.c[key])), int(max(data.c[key])), 5)],
+                tickvals=[int(x) for x in np.linspace(min(data.c[key]), max(data.c[key]), 10)],
                 ticks="outside",
                 len=0.8,
             )

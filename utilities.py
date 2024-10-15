@@ -1,7 +1,6 @@
 # Library imports
 import plotly.graph_objs as go
 import numpy as np
-import pandas as pd
 
 
 def gen_spot(x:float, y:float, color, dia_beam:float, angle_incident:float) -> dict:

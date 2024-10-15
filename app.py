@@ -6,7 +6,7 @@ from dropdowns import file_listbox, colormaps, sample_outline
 from divs import info_panel
 from buttons import delete_selected
 from sliders import angle_of_incident, spot_size
-from graphs import main_graph
+import graphs
 from stores import files_store
 
 
@@ -38,7 +38,7 @@ app.layout = html.Div([
     html.Div(
         [
             # Main graph window
-            main_graph,
+            graphs.layout,
         ], 
         style={
             'width': '60%', 

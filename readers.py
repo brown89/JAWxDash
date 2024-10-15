@@ -7,6 +7,7 @@ import numpy as np
 
 
 class DataXYC:
+    SCALE = 0.2  # Used for creating the zoom
 
     @classmethod
     def from_dict(cls, data:dict) -> "DataXYC":
@@ -42,7 +43,22 @@ class DataXYC:
         z_min, z_max = min(self.c[key0]), max(self.c[key0])
         diff = z_max - z_min
         return [(z - z_min) / diff for z in self.c[key0]]
-
+    
+    def x_range(self) -> list:
+        return [
+            min(self.x) - DataXYC.SCALE*self.width(),  # min
+            max(self.x) + DataXYC.SCALE*self.width()  # max
+        ]
+    
+    def y_range(self) -> list:
+        return [
+            min(self.y) - DataXYC.SCALE*self.height(),  # min
+            max(self.y) + DataXYC.SCALE*self.height()  # max
+        ]
+    
+    def len(self) -> int:
+        return len(self.x)
+    
     def to_dict(self) -> dict:
         return dict(
             x = self.x,
