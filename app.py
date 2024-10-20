@@ -23,7 +23,6 @@ app.layout = html.Div([
     html.Div(
         [
             drag_n_drop,
-            file_listbox,
             delete_selected,
         ], 
         style={
@@ -38,6 +37,7 @@ app.layout = html.Div([
     html.Div(
         [
             # Main graph window
+            file_listbox,
             graphs.layout,
         ], 
         style={

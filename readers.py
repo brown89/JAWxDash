@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import base64
 import io
 import pandas as pd
@@ -6,81 +6,104 @@ import re
 import numpy as np
 
 
+@dataclass
+class Settings:
+    angle_of_incident:int = 65
+    spot_size:float = 3.0
+    colormap:str = 'viridis'
+    sample_outline:str = None
+
+
+    def to_dict(self) -> dict:
+        return dict(
+            angle_of_incident=self.angle_of_incident,
+            spot_size=self.spot_size,
+            colormap=self.colormap,
+            sample_outline=self.sample_outline,
+        )
+
+
 class DataXYC:
     SCALE = 0.2  # Used for creating the zoom
 
     @classmethod
-    def from_dict(cls, data:dict) -> "DataXYC":
-
+    def from_dict(cls, dict_data) -> "DataXYC":
+        
         return DataXYC(
-            data['x'],
-            data['y'],
-            data['c'],
+            data=pd.DataFrame(data=dict_data['data']),
+            settings=dict_data['settings']
         )
     
-    def __init__(self, x:list[float], y:list[float], c:dict):
+
+    def __init__(self, data:pd.DataFrame, settings:Settings):
         """
         Base class from which to construct data import types
         """
-        self.x = x
-        self.y = y
-        self.c = c
+        self.data = data
+        self.settings = settings
         pass
 
     
     def width(self) -> float:
-        return max(self.x) - min(self.x)
+        return max(self.data.x) - min(self.data.x)
     
 
     def height(self) -> float:
-        return max(self.y) - min(self.y)
+        return max(self.data.y) - min(self.data.y)
     
 
-    def z_normalized(self) -> list:
+    def normalized(self, column_id:str|int = 0) -> np.ndarray:
         # Needs work, but we'll start by accessing the first key in 'c'.
 
-        key0 = list(self.c)[0]
-        z_min, z_max = min(self.c[key0]), max(self.c[key0])
-        diff = z_max - z_min
-        return [(z - z_min) / diff for z in self.c[key0]]
+        if isinstance(column_id, str):
+            c = self.data[column_id].to_numpy()
+        elif isinstance(column_id, int):
+            c = self.data.iloc[:, column_id].to_numpy()
+        else:
+            raise ValueError("column_id must be a string or integer")
+        
+        c = c - min(c)
+        
+        return c/max(c)
     
+
     def x_range(self) -> list:
         return [
-            min(self.x) - DataXYC.SCALE*self.width(),  # min
-            max(self.x) + DataXYC.SCALE*self.width()  # max
+            min(self.data.x) - DataXYC.SCALE*self.width(),  # min
+            max(self.data.x) + DataXYC.SCALE*self.width()  # max
         ]
     
     def y_range(self) -> list:
         return [
-            min(self.y) - DataXYC.SCALE*self.height(),  # min
-            max(self.y) + DataXYC.SCALE*self.height()  # max
+            min(self.data.y) - DataXYC.SCALE*self.height(),  # min
+            max(self.data.y) + DataXYC.SCALE*self.height()  # max
         ]
     
     def len(self) -> int:
-        return len(self.x)
+        return len(self.data.index)
     
-    def to_dict(self) -> dict:
+    def to_dict(self):
+
         return dict(
-            x = self.x,
-            y = self.y,
-            c = self.c,
+            data=self.data.to_dict(orient="list"),
+            settings=self.settings.to_dict()
         )
 # --- End of BaseDataStruct ---
 
 
-def read_xyz_csv(file:bytes) -> DataXYC:
+def read_xyz_csv(file:bytes) -> pd.DataFrame:
     df = pd.read_csv(io.StringIO(file.decode("utf-8")))
 
-    return DataXYC(df.x, df.y, {"z": df.z})
+    return df
 
 
-def read_xyz_txt(file:bytes) -> DataXYC:
+def read_xyz_txt(file:bytes) -> pd.DataFrame:
     df = pd.read_csv(io.StringIO(file.decode('utf-8')), delimiter='\t')
 
-    return DataXYC(df.x, df.y, {'z': df.z})
+    return df
 
 
-def read_jaw_txt(file:bytes) -> DataXYC:
+def read_jaw_txt(file:bytes) -> pd.DataFrame:
 
     # Opening file and reading into list
     buffer = io.StringIO(file.decode("utf-8"))
@@ -144,16 +167,18 @@ def read_jaw_txt(file:bytes) -> DataXYC:
 
             print("Woopsie!")
             print(i, len(matches))
-    
+
+    # Adding x and y to DataFrame
+    df['x'] = x
+    df['y'] = y
+
+    # Drops first (zero'th) column
     df = df.drop(columns=df.columns[0], axis=1)
 
-    # Converting datafram to dictionary
-    c = {}
-    for col in df.columns:
-        c[col] = df[col].to_list()
+    # Drop rows with NaN values
+    df = df.dropna()
     
-
-    return DataXYC(x, y, c)
+    return df
 
 
 def parse_contents(contents, filename) -> DataXYC|None:
@@ -162,10 +187,15 @@ def parse_contents(contents, filename) -> DataXYC|None:
 
     # Assume the user uploaded a CSV file
     if '.csv' in filename:
-        return read_xyz_csv(file)
+        data = read_xyz_csv(file)
+        settings = Settings()
+
+        return DataXYC(data, settings)
     
     elif '.txt' in filename:
-        return read_jaw_txt(file)
+        data = read_jaw_txt(file)
+        settings = Settings()
+        return DataXYC(data, settings)
     
     else:
         # File type NOT supported

@@ -85,16 +85,16 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     selected_data = current_files[selected_file]
 
     # Retriving data
-    data = DataXYC.from_dict(selected_data)
+    sample = DataXYC.from_dict(selected_data)
 
     # Static typed first key, needs to be updated
-    key = list(data.c)[0]
+    key = sample.data.columns[0]
 
     # Making colors
     colormap = selected_colormap
     colors = px.colors.sample_colorscale(
         colorscale=colormap, 
-        samplepoints=data.z_normalized()
+        samplepoints=sample.normalized()
     )
 
     shapes = []
@@ -102,11 +102,11 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     y = [None]
     marker_color = 'rgb(255,0,0)'
 
-    if data.len() > CRITICAL_COUNT:
+    if sample.len() > CRITICAL_COUNT:
         # Plot at scatter
-        x = data.x
-        y = data.y
-        marker_color = data.c[key]
+        x = sample.data.x
+        y = sample.data.y
+        marker_color = sample.data[key]
 
     
     else:
@@ -115,7 +115,7 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         shapes = [
             gen_spot(x, y, c, spot_size, angle_of_incident) 
             for x, y, c 
-            in zip(data.x, data.y, colors)
+            in zip(sample.data.x, sample.data.y, colors)
         ]
 
     
@@ -128,8 +128,8 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     layout_updates = dict(
         title = f"Selected file: {selected_file}",
         shapes = tuple(shapes),
-        xaxis = {'range': data.x_range()} | FIGURE_LAYOUT['xaxis'],
-        yaxis = {'range': data.y_range()} | FIGURE_LAYOUT['yaxis'],
+        xaxis = {'range': sample.x_range()} | FIGURE_LAYOUT['xaxis'],
+        yaxis = {'range': sample.y_range()} | FIGURE_LAYOUT['yaxis'],
     )
  
     figure = go.Figure(
@@ -147,13 +147,13 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         marker_color=marker_color,
         marker=dict(
             size=5,
-            color=[int(min(data.c[key])), int(max(data.c[key]))],
+            color=[int(min(sample.data[key])), int(max(sample.data[key]))],
             showscale=True,
             colorscale=colormap,
             colorbar=dict(
-                title="Color Scale",
+                title=key,
                 titleside="right",
-                tickvals=[int(x) for x in np.linspace(min(data.c[key]), max(data.c[key]), 10)],
+                tickvals=[int(x) for x in np.linspace(min(sample.data[key]), max(sample.data[key]), 10)],
                 ticks="outside",
                 len=0.8,
             )
