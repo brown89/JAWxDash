@@ -57,15 +57,26 @@ layout = dcc.Graph(
 
 @callback(
     Output(ids.Graph.MAIN, 'figure', allow_duplicate=True),
+    Output(ids.DropDown.Z_DATA, 'value'),
+    Output(ids.DropDown.Z_DATA, 'options'),
     Input(ids.DropDown.UPLOADED_FILES, 'value'),
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
     Input(ids.Slider.SPOT_SIZE, 'value'),
     Input(ids.DropDown.COLORMAPS, 'value'),
+    Input(ids.DropDown.Z_DATA, 'value'),
     State(ids.DropDown.SAMPLE_OUTLINE, 'value'), # Sample outline as an input is handled seperatly
     State(ids.Store.UPLOADED_FILES, 'data'),
     prevent_initial_call=True,
 )
-def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap, selected_outline:str, current_files) -> go.Figure:
+def update_graph(
+        selected_file:str, 
+        angle_of_incident:int, 
+        spot_size:float, 
+        selected_colormap:str,
+        selected_z_data:str, 
+        selected_outline:str, 
+        current_files:dict
+    ) -> go.Figure:
     """
     Updates the graph object uppon changes to one of the following:
     - File dropdown
@@ -79,7 +90,7 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     # Ensuring valid selection and file store
     if not selected_file or not current_files:
         return None
-    
+            
     
     # Retriving data from dcc.Store
     selected_data = current_files[selected_file]
@@ -87,8 +98,17 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
     # Retriving data
     sample = DataXYC.from_dict(selected_data)
 
-    # Static typed first key, needs to be updated
-    key = sample.data.columns[0]
+    # Checking for selected Z-data
+    if not selected_z_data:
+        if sample.len() >= 8:
+            # Defaults to 7, we're aiming for "Thickness nm"
+            key = sample.data.columns[7]
+        else:
+            key = sample.data.columns[0]
+    
+    else:
+        key = selected_z_data
+    
 
     # Making colors
     colormap = selected_colormap
@@ -161,7 +181,10 @@ def update_graph(selected_file, angle_of_incident, spot_size, selected_colormap,
         name='colormap_placeholder',
     ))
     
-    return figure
+    value = key
+    options = sample.data.columns
+    
+    return figure, value, options
 
 
 @callback(

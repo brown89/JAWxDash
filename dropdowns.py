@@ -32,3 +32,13 @@ sample_outline = dcc.Dropdown(
     multi=False,
     clearable=True,
 )
+
+
+z_data = dcc.Dropdown(
+    id=ids.DropDown.Z_DATA,
+    options=[],
+    value='',
+    multi=False,
+    clearable=False,
+)
+

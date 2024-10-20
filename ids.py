@@ -10,6 +10,7 @@ class DropDown:
     UPLOADED_FILES = "dropdown_uploaded_files"
     COLORMAPS = "dropdown_colormaps"
     SAMPLE_OUTLINE = "dropdown_sample_outline"
+    Z_DATA = "dropdown_z_data"
     
 
 class Graph:

@@ -2,7 +2,7 @@ from dash import Dash, html
 
 # Local import
 from uploads import drag_n_drop
-from dropdowns import file_listbox, colormaps, sample_outline
+from dropdowns import file_listbox, colormaps, sample_outline, z_data
 from divs import info_panel
 from buttons import delete_selected
 from sliders import angle_of_incident, spot_size
@@ -59,6 +59,8 @@ app.layout = html.Div([
             colormaps,
             html.H6("Sample outline", style={'textAlign': 'center',}),
             sample_outline,
+            html.H6("Z-Data", style={'textAlign': 'center',}),
+            z_data,
         ], 
         style={
             'width': '20%', 
