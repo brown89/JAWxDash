@@ -100,9 +100,8 @@ def update_graph(
 
     # Checking for selected Z-data
     if not selected_z_data:
-        if sample.len() >= 8:
-            # Defaults to 7, we're aiming for "Thickness nm"
-            key = sample.data.columns[7]
+        if 'thickness_nm' in sample.data.columns:
+            key = 'thickness_nm'
         else:
             key = sample.data.columns[0]
     
