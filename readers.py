@@ -117,7 +117,7 @@ def read_jaw_txt(file:bytes) -> pd.DataFrame:
     # [+-]?: Matches an optional + or - sign before each number.
     # \d+\.\d+: Matches a decimal number (one or more digits before and after the decimal point).
     # ,: Matches the comma separating the two numbers.
-    pattern = r"\([+-]?\d+\.\d+,[+-]?\d+\.\d+\)"
+    pattern = r"\([+-]?\d+(\.\d+)?,[+-]?\d+(\.\d+)?\)"
 
     data_line = False
     for i, line in enumerate(lines):
@@ -152,9 +152,10 @@ def read_jaw_txt(file:bytes) -> pd.DataFrame:
     
 
     # Extract x and y
-    pattern = r"[+-]?\d+\.\d+"
+    pattern = r"[-+]?(?:\d*\.*\d+)"
+
     x, y = [], []
-    for xy in df.iloc[:, 0].values.tolist():
+    for i, xy in enumerate(df.iloc[:, 0].values.tolist()):
         matches = re.findall(pattern, xy)
 
         if len(matches) == 2:
@@ -165,8 +166,7 @@ def read_jaw_txt(file:bytes) -> pd.DataFrame:
             x.append(np.nan)
             y.append(np.nan)
 
-            print("Woopsie!")
-            print(i, len(matches))
+            print(f"Bad pattern! row: {i}, string: {xy}, match: {matches}")
 
     # Adding x and y to DataFrame
     df['x'] = x
