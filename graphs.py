@@ -13,8 +13,8 @@ from sample_outlines import sample_outlines
 
 # template for the figure layout
 FIGURE_LAYOUT = dict(
-    xaxis_title = "X-axis (mm)",
-    yaxis_title = "Y-axis (mm)",
+    xaxis_title = "X-axis (cm)",
+    yaxis_title = "Y-axis (cm)",
     xaxis=dict(
         scaleanchor="y",
         scaleratio=1,
@@ -45,7 +45,7 @@ figure.add_trace(go.Scatter(
 
 # Adding a placeholder for sample outline
 # 8in wafer
-r = 1*25.4
+r = 1*2.54
 
 
 # Setting dcc.Graph object
