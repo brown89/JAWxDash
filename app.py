@@ -1,13 +1,14 @@
-from dash import Dash, html
+from dash import Dash, dcc, html
 
 # Local import
-from uploads import drag_n_drop
-from dropdowns import file_listbox, colormaps, sample_outline, z_data
-from divs import info_panel
 from buttons import delete_selected
-from sliders import angle_of_incident, spot_size
+from divs import info_panel
+from dropdowns import file_listbox, colormaps, sample_outline, z_data
 import graphs
+from radioitems import plot_style, spot_size
+from sliders import angle_of_incident
 from stores import files_store
+from uploads import drag_n_drop
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -51,9 +52,11 @@ app.layout = html.Div([
     # Right column
     html.Div(
         [
+            html.H6("Plotting style", style={'textAlign': 'center',}),
+            plot_style,
             html.H6("Angle of incident (deg)", style={'textAlign': 'center',}),
             angle_of_incident,
-            html.H6("Spot size (mm)", style={'textAlign': 'center',}),
+            html.H6("Spot size", style={'textAlign': 'center',}),
             spot_size,
             html.H6("Colormap", style={'textAlign': 'center',}),
             colormaps,

@@ -60,8 +60,9 @@ layout = dcc.Graph(
     Output(ids.DropDown.Z_DATA, 'value'),
     Output(ids.DropDown.Z_DATA, 'options'),
     Input(ids.DropDown.UPLOADED_FILES, 'value'),
+    Input(ids.RadioItems.PLOT_STYLE, 'value'),
     Input(ids.Slider.ANGLE_OF_INCIDENT, 'value'),
-    Input(ids.Slider.SPOT_SIZE, 'value'),
+    Input(ids.RadioItems.SPOT_SIZE, 'value'),
     Input(ids.DropDown.COLORMAPS, 'value'),
     Input(ids.DropDown.Z_DATA, 'value'),
     State(ids.DropDown.SAMPLE_OUTLINE, 'value'), # Sample outline as an input is handled seperatly
@@ -69,7 +70,8 @@ layout = dcc.Graph(
     prevent_initial_call=True,
 )
 def update_graph(
-        selected_file:str, 
+        selected_file:str,
+        plot_style:str, 
         angle_of_incident:int, 
         spot_size:float, 
         selected_colormap:str,
@@ -121,21 +123,21 @@ def update_graph(
     y = [None]
     marker_color = 'rgb(255,0,0)'
 
-    if sample.len() > CRITICAL_COUNT:
+    if plot_style == 'point':
         # Plot at scatter
         x = sample.data.x
         y = sample.data.y
         marker_color = sample.data[key]
 
     
-    else:
+    elif plot_style == 'ellipse':
         # Plot as ellipse
         # Initializing list of shapes + Generating spots and collecting
         shapes = [
             gen_spot(x, y, c, spot_size, angle_of_incident) 
             for x, y, c 
             in zip(sample.data.x, sample.data.y, colors)
-        ]
+        ]  # List comprehension
 
     
     
@@ -165,7 +167,7 @@ def update_graph(
         mode='markers',
         marker_color=marker_color,
         marker=dict(
-            size=5,
+            size=10,
             color=[int(min(sample.data[key])), int(max(sample.data[key]))],
             showscale=True,
             colorscale=colormap,

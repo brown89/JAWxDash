@@ -30,3 +30,7 @@ class Upload:
     DRAG_N_DROP = "upload_drag_n_drop"
 
 
+class RadioItems:
+    PLOT_STYLE = "plot_style"
+    SPOT_SIZE = "spot_size"
+    
